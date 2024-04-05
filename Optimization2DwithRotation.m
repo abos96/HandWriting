@@ -82,9 +82,10 @@ if (any(((A*iparams') < b') == 0))
       %ux   %nx   %uy    %ny  %teta
     lb_linear = [-inf  0    -inf    0    -20]; % ux: Lmin <= ux <= Lmax % nx: Lmin/2 <= nx <= Lmax/2
     ub_linear = [inf   100   inf   100   20];  % uy: Hmin <= uy <= Hmax % ny: Hmin/2 <= ny <= Hmax/2
-
-
-    xnew = linprog(f,A,b,[],[], lb_linear ,ub_linear);  % Solve the linear programming problem to see if there is a feasible point
+    
+    % need in Matlab R2024a (or Mac)
+    options = optimoptions('linprog','Algorithm','interior-point');
+    [xnew,fval,exitflag,output]= linprog(f,A,b,[],[], lb_linear ,ub_linear,options);  % Solve the linear programming problem to see if there is a feasible point
     x0 = xnew;
     % compute and plot mesh with initial parameters
     figure(2)
