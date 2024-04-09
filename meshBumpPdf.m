@@ -71,7 +71,7 @@ switch mode
             
             % Create a contour plot
             % Define the colormap
-            colormap_name = 'turbo'; % Change this to the name of your desired colormap
+            colormap_name = cl; % Change this to the name of your desired colormap
             cmap = colormap(colormap_name);
             
             % Generate a random index

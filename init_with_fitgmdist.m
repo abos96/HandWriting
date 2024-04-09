@@ -18,14 +18,14 @@ end
 % Plot GMM components
 % Plot data points
 figure;
-scatter(x_data, y_data, 'filled', 'DisplayName', 'Data Points');
+scatter(x_data, y_data, 'filled' ,'b','DisplayName', 'Data Points');
 hold on
 for ii = 1:chunks_num
     mu = gmm{idx}.mu(ii, :);  % Mean of the i-th component
     Sigma = gmm{idx}.Sigma(:, :, ii);  % Covariance matrix of the i-th component
     plot_gaussian_2d(mu, Sigma, 'DisplayName', sprintf('Component %d', i));
 end
-
+title('GMM initialization')
 % compute the mean ux and ux of the bumps
 ux = gmm{idx}.mu(:, 1);
 uy = gmm{idx}.mu(:, 2);
@@ -38,8 +38,8 @@ for i = 1 : chunks_num
 
 covariance_matrix = min_sigma(:,:,i);
 
-nx(:,i) = sqrt(diag(covariance_matrix));
-ny(:,i) = sqrt(diag(covariance_matrix));
+nx(i) = sqrt(diag(covariance_matrix(1,1)));
+ny(i) = sqrt(diag(covariance_matrix(2,2)));
 
 % Compute the eigenvectors and eigenvalues of the covariance matrix
 [eigenvectors, eigenvalues] = eig(covariance_matrix);

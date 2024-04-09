@@ -18,7 +18,7 @@ switch case_variable
        
     case 'generated'
 
-        chunks_num = 3; % number of clusters
+        chunks_num = 4; % number of clusters
         n_fit = 20; % number of gmm fitting to initialize the model
 
         % paper parameters
@@ -27,12 +27,12 @@ switch case_variable
         n = 500; % mesh definition for "contour"
 
         % define chunks parameters
-        ux = [-5 0 5];
-        nx = [30 35 30];
-        uy = [-60 0 53];
-        ny = [8 10 10];
-        teta = [7 9 13];
-        N = [300 300 300];
+        ux = [-5 -40 5 40];
+        nx = [30 35 30 20];
+        uy = [-60 0 53 2];
+        ny = [8 10 10 5];
+        teta = [7 9 13 -5];
+        N = [200 200 200 200];
         
 
         % generete points in [ux,uy] with [nx,ny] (vectorized)
@@ -46,92 +46,112 @@ switch case_variable
         % plot
         figure(1)
         hold on
-        scatter(x,y,'filled','o','b')
+        scatter(x,y,'blue','filled')
         scatter(rotated_x,rotated_y,'filled','o','r')
         legend('original',sprintf('rotated teta = %.1f',teta))
         title('point generation')
 
 %% Initialization of alghoritm with GMM
 % add vargin gain to std
-
 iparams = init_with_fitgmdist(rotated_x,rotated_y,chunks_num,n_fit);
+
+% boost std of iparams
+gain = 3;
+iparams(2,:) = gain.*iparams(2,:) ;
+iparams(4,:) = gain.*iparams(4,:) ;
+
 
         
 end
 
-%% Define Optimization problem
-% Initial guess for the variables ux,nx,uy,ny
-
-iparams(1) = 0; % ux
-iparams(2) = 30; % nx
-iparams(3) = 50; % uy
-iparams(4) = 10; % ny
-iparams(5) = 0;
-x0 = iparams;
-
-% Bounds on  
-      %ux   %nx   %uy    %ny  %teta
-lb = [-inf  0    -inf    0    -60]; % ux: Lmin <= ux <= Lmax % nx: Lmin/2 <= nx <= Lmax/2
-ub = [inf   100   inf   100   60];  % uy: Hmin <= uy <= Hmax % ny: Hmin/2 <= ny <= Hmax/2
-
-% inequality const for manual initialization
-A = [-1 -1  0  0 0;... %  ux+nx >= max(x)
-      1 -1  0  0 0;... %  ux-nx <= min(x)
-      0 -1  0  0 0;... %  nx >= 1
-      0  0 -1 -1 0;... %  uy-ny >= max(y)
-      0  0  1 -1 0;... %  ux-nx <= min(y)
-      0  0  0 -1 0];   %  ny >= 1
-
-b = [-max(rotated_x)+0.001 min(rotated_x)-0.001  -1,...
-     -max(rotated_y)+0.001 min(rotated_y)-0.001  -1];
-
-
-
-
-%% Initialization Optimization Problem
-% check if initial point satisfy constrain
-% Inizialization
-if (any(((A*iparams') < b') == 0))
-
-    f = zeros(size(x0)); % assumes x0 is the initial point
-    % Bounds on  
-      %ux   %nx   %uy    %ny  %teta
-    lb_linear = [-inf  0    -inf    0    -20]; % ux: Lmin <= ux <= Lmax % nx: Lmin/2 <= nx <= Lmax/2
-    ub_linear = [inf   100   inf   100   20];  % uy: Hmin <= uy <= Hmax % ny: Hmin/2 <= ny <= Hmax/2
-    
-    % need in Matlab R2024a (or Mac)
-    options = optimoptions('linprog','Algorithm','interior-point');
-    [xnew,fval,exitflag,output]= linprog(f,A,b,[],[], lb_linear ,ub_linear,options);  % Solve the linear programming problem to see if there is a feasible point
-    x0 = xnew;
-    % compute and plot mesh with initial parameters
-    figure(2)
-    hold on
-    scatter(rotated_x, rotated_y, 'b', 'filled');  % 'b' specifies blue color, 'filled' fills the markers
-    [a] = meshBumpPdf(x0,H,L,n,'black');
-    title('Optimized initial points')
-    legend('Initial Points','Optimal initial Bump Function')
-    
-else 
-    x0 = iparams;
-    figure(2)
-    hold on
-    scatter(rotated_x, rotated_y, 'b', 'filled');  % 'b' specifies blue color, 'filled' fills the markers
-    [a] = meshBumpPdf(x0,H,L,n,'black');
-    title('Optimized initial points')
-    legend('Initial Points','Optimal initial Bump Function')
-end
+% %% Define Optimization problem
+% % Initial guess for the variables ux,nx,uy,ny
+% 
+% iparams(1) = 0; % ux
+% iparams(2) = 30; % nx
+% iparams(3) = 50; % uy
+% iparams(4) = 10; % ny
+% iparams(5) = 0;
+% x0 = iparams;
+% 
+% % Bounds on  
+%       %ux   %nx   %uy    %ny  %teta
+% lb = [-inf  0    -inf    0    -60]; % ux: Lmin <= ux <= Lmax % nx: Lmin/2 <= nx <= Lmax/2
+% ub = [inf   100   inf   100   60];  % uy: Hmin <= uy <= Hmax % ny: Hmin/2 <= ny <= Hmax/2
+% 
+% % inequality const for manual initialization
+% A = [-1 -1  0  0 0;... %  ux+nx >= max(x)
+%       1 -1  0  0 0;... %  ux-nx <= min(x)
+%       0 -1  0  0 0;... %  nx >= 1
+%       0  0 -1 -1 0;... %  uy-ny >= max(y)
+%       0  0  1 -1 0;... %  ux-nx <= min(y)
+%       0  0  0 -1 0];   %  ny >= 1
+% 
+% b = [-max(rotated_x)+0.001 min(rotated_x)-0.001  -1,...
+%      -max(rotated_y)+0.001 min(rotated_y)-0.001  -1];
+% 
+% 
+% 
+% 
+% %% Initialization Optimization Problem
+% % check if initial point satisfy constrain
+% % Inizialization
+% if (any(((A*iparams') < b') == 0))
+% 
+%     f = zeros(size(x0)); % assumes x0 is the initial point
+%     % Bounds on  
+%       %ux   %nx   %uy    %ny  %teta
+%     lb_linear = [-inf  0    -inf    0    -20]; % ux: Lmin <= ux <= Lmax % nx: Lmin/2 <= nx <= Lmax/2
+%     ub_linear = [inf   100   inf   100   20];  % uy: Hmin <= uy <= Hmax % ny: Hmin/2 <= ny <= Hmax/2
+% 
+%     % need in Matlab R2024a (or Mac)
+%     options = optimoptions('linprog','Algorithm','interior-point');
+%     [xnew,fval,exitflag,output]= linprog(f,A,b,[],[], lb_linear ,ub_linear,options);  % Solve the linear programming problem to see if there is a feasible point
+%     x0 = xnew;
+%     % compute and plot mesh with initial parameters
+%     figure(2)
+%     hold on
+%     scatter(rotated_x, rotated_y, 'b', 'filled');  % 'b' specifies blue color, 'filled' fills the markers
+%     [a] = meshBumpPdf(x0,H,L,n,'black');
+%     title('Optimized initial points')
+%     legend('Initial Points','Optimal initial Bump Function')
+% 
+% else 
+%     x0 = iparams;
+%     figure(2)
+%     hold on
+%     scatter(rotated_x, rotated_y, 'b', 'filled');  % 'b' specifies blue color, 'filled' fills the markers
+%     [a] = meshBumpPdf(x0,H,L,n,'black');
+%     title('Optimized initial points')
+%     legend('Initial Points','Optimal initial Bump Function')
+% end
 
 %% define mixture parameters
 % replicate x0 for each bump function
-x0_n = repmat(x0,1,chunks_num);
+% x0_n = repmat(x0,1,chunks_num);
+% Bounds on  
+  %ux   %nx   %uy    %ny  %teta
+lb_linear = [-inf  0    -inf    0    -20]; % ux: Lmin <= ux <= Lmax % nx: Lmin/2 <= nx <= Lmax/2
+ub_linear = [inf   100   inf   100   20];  % uy: Hmin <= uy <= Hmax % ny: Hmin/2 <= ny <= Hmax/2
 lb_n = repmat(lb_linear',1,chunks_num); 
 ub_n = repmat(ub_linear',1,chunks_num); 
 
 % define Wk initial and bounds
 W_k_n = (ones(chunks_num,1)./chunks_num)';
-x0_n = [x0_n;W_k_n];
+x0_n = [iparams;W_k_n];
 lb_n = [lb_n; zeros(chunks_num,1)'];
 ub_n = [ub_n; ones(chunks_num,1)'];
+
+% Plot initial points
+figure(4)
+hold on
+%initial point 2 fit
+scatter(rotated_x, rotated_y, 'b', 'filled');  % 'b' specifies blue color, 'filled' fills the markers
+% compute and plot mesh with initial parameters
+x0_n(5,:) = -x0_n(5,:);
+[Xi,Yi] = meshBumpPdf(x0_n,H,L,n,'parula');
+title('Initial bumps')
+%legend('Initial Points','Optimal Bump Function','Initial Bump Function')
 
 %% solving optimization problem
 % Objective function: 
@@ -164,15 +184,20 @@ figure(3)
 hold on
 %initial point 2 fit
 scatter(rotated_x, rotated_y, 'b', 'filled');  % 'b' specifies blue color, 'filled' fills the markers
-
-
 % compute and plot mesh with optimal parameters
-[Xo,Yo] = meshBumpPdf(optimal_params,H,L,n,'red');
+[Xo,Yo] = meshBumpPdf(optimal_params,H,L,n,'autumn');
+title('Final Bumps')
+%legend('Initial Points','Optimal Bump Function','Initial Bump Function')
 
+
+% Plot initial points
+figure(4)
+hold on
+%initial point 2 fit
+scatter(rotated_x, rotated_y, 'b', 'filled');  % 'b' specifies blue color, 'filled' fills the markers
 % compute and plot mesh with initial parameters
-[Xi,Yi] = meshBumpPdf(iparams',H,L,n,'black');
-
-title('Optimization Bump Function')
+[Xi,Yi] = meshBumpPdf(x0_n,H,L,n,'parula');
+title('Initial bumps')
 %legend('Initial Points','Optimal Bump Function','Initial Bump Function')
 
 

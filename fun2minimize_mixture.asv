@@ -1,6 +1,6 @@
 function loglikelihood = fun2minimize_mixture (params,x,y)
 
-debug = 0;
+debug = 1;
 number_of_bump = size(params,2);
 
 for i = 1 : number_of_bump
@@ -19,7 +19,7 @@ for i = 1 : number_of_bump
     figure(5)
     hold on
     scatter(Xr, Yr, 'b', 'filled');  % 'b' specifies blue color, 'filled' fills the markers
-    [a] = meshBumpPdf([0 nx 0 ny 0]',200,200,500,'black');
+    [a] = meshBumpPdf([0 nx 0 ny 0],200,200,500,'black');
     title('Optimized initial points')
     legend('Initial Points',sprintf('Optimal Bump Function teta=%.1f',teta))
     pause(0.2)
@@ -33,7 +33,7 @@ for i = 1 : number_of_bump
     Bny = integral(Bump1_handley, -ny, +ny);
 
     % compute pdf of i-th bump
-    P_i(i,:) = W_k.*Bump1(Xr,0,nx).*Bump1(Yr,0,ny)./(Bnx.*Bny);
+    P_i(i,:) = W_k.*Bump1(Xr,ux,nx).*Bump1(Yr,uy,ny)./(Bnx.*Bny);
    
 end
 
