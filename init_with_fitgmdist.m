@@ -1,4 +1,4 @@
-function iparams = init_with_fitgmdist(x_data,y_data,chunks_num,n_fit)
+function [iparams,min_loglike] = init_with_fitgmdist(x_data,y_data,chunks_num,n_fit)
 
 close all
 
@@ -6,14 +6,14 @@ close all
 gmm = {};
 
 for i = 1 : n_fit
-
+    
     gmm{i} = fitgmdist([x_data;y_data]',chunks_num);
     loglike(i) = gmm{i}.NegativeLogLikelihood;
     
 end
 
 % find the best gmm fitting
-[val,idx] = min(loglike);
+[min_loglike,idx] = min(loglike);
 
 % Plot GMM components
 % Plot data points

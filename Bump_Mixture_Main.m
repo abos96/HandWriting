@@ -18,8 +18,9 @@ switch case_variable
        
     case 'generated'
 
-        chunks_num = 4; % number of clusters
+        chunks_num = 7; % number of clusters
         n_fit = 20; % number of gmm fitting to initialize the model
+        max_chunks = 12;
 
         % paper parameters
         L = 200; 
@@ -27,12 +28,12 @@ switch case_variable
         n = 500; % mesh definition for "contour"
 
         % define chunks parameters
-        ux = [-5 -40 5 40];
-        nx = [30 35 30 20];
-        uy = [-60 0 53 2];
-        ny = [8 10 10 5];
-        teta = [7 9 13 -5];
-        N = [200 200 200 200];
+        ux = [-5 -40 5 40 -20 20 10];
+        nx = [30 35 30 20 15 12 13];
+        uy = [-60 0 53 2 20 -20 13];
+        ny = [8 10 10 5 8 12 5];
+        teta = [7 9 13 -5 3 -6 9];
+        N = [100 100 100 100 100 100 100];
         
 
         % generete points in [ux,uy] with [nx,ny] (vectorized)
@@ -51,7 +52,45 @@ switch case_variable
         legend('original',sprintf('rotated teta = %.1f',teta))
         title('point generation')
 
-%% Initialization of alghoritm with GMM
+%% Initialization of GMM defining best chunk_num
+
+xplot = [];
+min_aic = [];
+min_bic = [];
+figure
+for i = 2:max_chunks
+
+    try
+        [min_aic(i-1),min_bic(i-1)] = fit_gmm_and_compute_likelihood(rotated_x, rotated_y, i, n_fit,0);
+    catch exception
+        disp('There was an error fitting the Gaussian mixture model - try regularization...')
+        error = exception.message
+        [min_aic(i-1),min_bic(i-1)] = fit_gmm_and_compute_likelihood(rotated_x, rotated_y, i, n_fit,1);
+    end
+    xplot = [xplot i];
+end
+
+
+plot(xplot,min_aic,'bo')
+hold on
+plot(xplot,min_aic,'b')
+
+plot(xplot,min_bic,'ro')
+plot(xplot,min_bic,'r')
+hold off
+legend('aic','','bic','')
+title('Optimization GMM')
+xlabel('Number of Gaussian')
+ylabel('Optimiztion Value BIC-AIC')
+
+[val,chunks_num] = min(min_bic);
+best_chunk = chunks_num + 1;
+hold on
+% Plot the big green circle around the best chunks num
+xl = xline(best_chunk,'-.','Best Cluster Number','DisplayName','Best Cluster');
+
+%% Initialization of GMM 
+
 % add vargin gain to std
 iparams = init_with_fitgmdist(rotated_x,rotated_y,chunks_num,n_fit);
 

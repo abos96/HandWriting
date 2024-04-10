@@ -1,0 +1,17 @@
+function likelihood = fit_gmm_and_compute_likelihood(x_data, y_data, chunks_num,n_fit)
+    %fit the data with GMM n_fit time
+gmm = {};
+
+for i = 1 : n_fit
+
+    gmm{i} = fitgmdist([x_data;y_data]',round(chunks_num));
+    loglike(i) = gmm{i}.aic;
+    loglike(i) = gmm{i}.aic;
+    
+end
+
+% find the best gmm fitting
+[likelihood,idx] = min(loglike);
+
+
+end

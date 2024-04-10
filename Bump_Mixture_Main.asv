@@ -18,8 +18,9 @@ switch case_variable
        
     case 'generated'
 
-        chunks_num = 3; % number of clusters
+        chunks_num = 4; % number of clusters
         n_fit = 20; % number of gmm fitting to initialize the model
+        max_chunks = 6;
 
         % paper parameters
         L = 200; 
@@ -31,8 +32,8 @@ switch case_variable
         nx = [30 35 30 20];
         uy = [-60 0 53 2];
         ny = [8 10 10 5];
-        teta = [7 9 13 ];
-        N = [300 300 300 200];
+        teta = [7 9 13 -5];
+        N = [200 200 200 200];
         
 
         % generete points in [ux,uy] with [nx,ny] (vectorized)
@@ -46,12 +47,42 @@ switch case_variable
         % plot
         figure(1)
         hold on
-        scatter(x,y,'filled','o','b')
+        scatter(x,y,'blue','filled')
         scatter(rotated_x,rotated_y,'filled','o','r')
         legend('original',sprintf('rotated teta = %.1f',teta))
         title('point generation')
 
-%% Initialization of alghoritm with GMM
+%% Initialization of GMM defining best chunk_num
+
+xplot = [];
+min_aic = [];
+min_bic = [];
+figure
+for i = 2:max_chunks
+try
+    GMModel = fitgmdist(X,2)
+catch exception
+    disp('There was an error fitting the Gaussian mixture model')
+    error = exception.message
+end
+
+[min_aic(i-1),min_bic(i-1)] = fit_gmm_and_compute_likelihood(rotated_x, rotated_y, i, n_fit);
+xplot = [xplot i];
+plot(xplot,min_aic,'bo')
+hold on
+plot(xplot,min_aic,'b')
+
+plot(xplot,min_bic,'ro')
+plot(xplot,min_bic,'r')
+hold off
+legend('aic','','bic','')
+title('Optimization GMM')
+
+end
+
+
+%% Initialization of GMM 
+
 % add vargin gain to std
 iparams = init_with_fitgmdist(rotated_x,rotated_y,chunks_num,n_fit);
 
@@ -149,7 +180,7 @@ hold on
 scatter(rotated_x, rotated_y, 'b', 'filled');  % 'b' specifies blue color, 'filled' fills the markers
 % compute and plot mesh with initial parameters
 x0_n(5,:) = -x0_n(5,:);
-[Xi,Yi] = meshBumpPdf(x0_n,H,L,n,'black');
+[Xi,Yi] = meshBumpPdf(x0_n,H,L,n,'parula');
 title('Initial bumps')
 %legend('Initial Points','Optimal Bump Function','Initial Bump Function')
 
