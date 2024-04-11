@@ -51,8 +51,18 @@ switch mode
             teta = params(5,i);
             W_k = params(6,i); 
             
-            x2plot = linspace(- L/2, + L/2, n);
-            y2plot = linspace(- H/2, + H/2, n);
+            if size(L)==1
+
+                x2plot = linspace(- L/2, + L/2, n);
+                y2plot = linspace(- H/2, + H/2, n);
+
+            elseif size(L)==[1,2] & size(H)==[1,2]
+
+                x2plot = linspace( L(1), L(2), n);
+                y2plot = linspace( H(1), H(2), n);
+
+            end
+
             
             [X, Y] = meshgrid(x2plot, y2plot);
             
