@@ -1,5 +1,5 @@
 function [iparams,min_loglike] = init_with_fitgmdist(x_data,y_data,chunks_num,n_fit)
-
+debug = 0;
 close all
 
 %fit the data with GMM n_fit time
@@ -9,6 +9,18 @@ for i = 1 : n_fit
     
     gmm{i} = fitgmdist([x_data;y_data]',chunks_num);
     loglike(i) = gmm{i}.NegativeLogLikelihood;
+    
+    if debug
+        figure;
+        scatter(x_data, y_data, 'filled' ,'b','DisplayName', 'Data Points');
+        hold on
+        for ii = 1:chunks_num
+        mu = gmm{i}.mu(ii, :);  % Mean of the i-th component
+        Sigma = gmm{i}.Sigma(:, :, ii);  % Covariance matrix of the i-th component
+        plot_gaussian_2d(mu, Sigma, 'DisplayName', sprintf('Component %d', i));
+        end
+        title('GMM initialization')
+    end
     
 end
 

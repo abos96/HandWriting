@@ -54,8 +54,8 @@ switch case_variable
         L = [0 250]; 
         H = [-120 30];
         n = 500; % mesh definition for "contour"
-        n_fit = 20;
-        max_chunks = 30;
+        n_fit = 50;
+        max_chunks = 20;
         %% Init GMM
         %Initialization of GMM defining best chunk_num
 
@@ -110,11 +110,18 @@ switch case_variable
         %% RUN GMM to initialize the bumps
         % add vargin gain to std
         iparams = init_with_fitgmdist(x',y',best_chunk,n_fit);
+
+        % refine step - delete gm with tilt>45
+        ToDelete = find(abs(iparams(5,:))>45);
+        best_chunk = best_chunk - length(ToDelete);
+        iparams(:,ToDelete) = [];
+        
         
         % boost std of iparams
-        gain = 3;
-        iparams(2,:) = gain.*iparams(2,:) ;
-        iparams(4,:) = gain.*iparams(4,:) ;
+        gain_x = 4;
+        gain_y = 4;
+        iparams(2,:) = gain_x.*iparams(2,:) ;
+        iparams(4,:) = gain_y.*iparams(4,:) ;
         
         % define Wk initial and bounds
         W_k_n = (ones(best_chunk,1)./best_chunk)';
